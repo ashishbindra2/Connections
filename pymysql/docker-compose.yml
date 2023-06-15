@@ -1,0 +1,50 @@
+version: "3.7"
+services:
+  iqaccolleges:
+    build: ./src
+    # command: python app.py
+    command: gunicorn --reload --bind 0.0.0.0:5332 app:app
+    #command: gunicorn --bind 0.0.0.0:5332 app:app
+    restart: always
+    volumes:
+      - ./src:/app
+    environment:
+      - APP_NAME=iqaccolleges
+      - MYSQL_DATABASE_URL=mysql+mysqlconnector://iqaccolleges:iqaccolleges123@db/iqaccolleges
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - FLASK_DEBUG=true
+      - DB_HOST=db
+      - MYSQL_USER=iqaccolleges
+      - MYSQL_PASSWORD=iqaccolleges123
+      - MYSQL_DATABASE=iqaccolleges
+    ports:
+      - 5332:5332
+    depends_on:
+      - db
+      - adminer
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 5331:8080
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0.23
+    command: '--default-authentication-plugin=mysql_native_password'
+    restart: always
+    volumes:
+      - ./docker_data/mysql_data:/var/lib/mysql
+      - ./config/mysql.conf.d:/etc/mysql/conf.d
+    environment:
+      - MYSQL_USER=iqaccolleges
+      - MYSQL_PASSWORD=iqaccolleges123
+      - MYSQL_DATABASE=iqaccolleges
+      - MYSQL_ROOT_PASSWORD=changemeroot123
+    cap_add:
+      - SYS_NICE
+    security_opt:
+      - seccomp:unconfined

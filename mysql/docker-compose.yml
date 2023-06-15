@@ -1,0 +1,39 @@
+version: "3.7"
+services:
+  acres:
+    build: ./src
+    command: gunicorn --bind 0.0.0.0:5096 live:app
+    restart: unless-stopped
+    environment:
+      - DB_HOST=db
+      - DB_NAME=101
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_PORT = 3306
+    ports:
+      - "5096:5096"
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0.23
+    command: '--default-authentication-plugin=mysql_native_password'
+    volumes:
+      - ./docker_data/mysql_data:/var/lib/mysql
+    restart: unless-stopped
+    environment:
+      # credentials
+      - MYSQL_DATABASE=101
+      - MYSQL_ROOT_PASSWORD=root
+    cap_add:
+      - SYS_NICE
+    security_opt:
+      - seccomp:unconfined
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 5095:8080
+    depends_on:
+      - db
